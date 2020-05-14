@@ -11,13 +11,31 @@ class TasksController extends Controller
     // getでtasks/にアクセスされた場合の「一覧表示処理」
     public function index()
     {
+        $data = [];
+        if (\Auth::check()) {
+            $user = \Auth::user();
+            $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
+            
+            $data = [
+                'user' => $user,
+                'tasks' => $tasks,
+            ];
+        }
+        
+        return view('welcome', $data);
+    }
+    
+    
+    public function tasks()
+    {
         $tasks = Task::all();
         
-        return view('tasks.index',[
+        return view('tasks.tasks',[
             'tasks' => $tasks,
             ]);
     }
-
+    
+    
     // getでtasks/createにアクセスされた場合の「新規登録画面表示処理」
     public function create()
     {
@@ -37,6 +55,7 @@ class TasksController extends Controller
         ]);
         
         $task = new Task;
+        $task->user_id = \Auth::user() -> id;
         $task->content = $request->content;
         $task->status = $request->status;
         $task->save();
@@ -76,6 +95,7 @@ class TasksController extends Controller
         $task->content = $request->content;
         $task->status = $request->status;
         $task->save();
+        
 
         return redirect('/');
     }
